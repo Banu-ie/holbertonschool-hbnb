@@ -48,36 +48,39 @@ The Facade pattern acts as the communication interface between layers. Instead o
 ```mermaid
 flowchart TD
     subgraph Presentation["Presentation Layer"]
-        A1[REST API Endpoints]
-        A2[Request Validation]
-        A3[Response Formatting]
-    end
-
-    subgraph Facade1["Facade Interface"]
-        F1[Service Facade]
+        A1[API Endpoints]
+        A2[Services]
     end
 
     subgraph BLL["Business Logic Layer"]
-        B1[User Model]
-        B2[Place Model]
-        B3[Review Model]
-        B4[Amenity Model]
-    end
-
-    subgraph Facade2["Facade Interface"]
-        F2[Repository Facade]
+        F[Facade Pattern]
+        F -->|Manages| B1[User Model]
+        F -->|Manages| B2[Place Model]
+        F -->|Manages| B3[Review Model]
+        F -->|Manages| B4[Amenity Model]
     end
 
     subgraph Persistence["Persistence Layer"]
-        C1[Repository Classes]
-        C2[DB Query Layer]
-        C3[ORM / Raw SQL]
+        C1[User Repository]
+        C2[Place Repository]
+        C3[Review Repository]
+        C4[Amenity Repository]
     end
 
-    Presentation --> Facade1
-    Facade1 --> BLL
-    BLL --> Facade2
-    Facade2 --> Persistence
+    DB[(Database)]
+
+    A1 -->|Uses| F
+    A2 -->|Uses| F
+
+    B1 -->|Persists via| C1
+    B2 -->|Persists via| C2
+    B3 -->|Persists via| C3
+    B4 -->|Persists via| C4
+
+    C1 -->|Read/Write| DB
+    C2 -->|Read/Write| DB
+    C3 -->|Read/Write| DB
+    C4 -->|Read/Write| DB
 ```
 
 ---
