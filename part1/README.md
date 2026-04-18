@@ -37,11 +37,11 @@ HBnB Evolution is built on a layered architecture where each layer has one clear
 
 ### The Facade Pattern
 
-The Facade pattern acts as the communication interface between layers. Instead of layers calling each other's internal methods directly, they go through a simplified interface (the Facade). This means:
+`HBnBFacade` serves as the single, unified entry point to the Business Logic Layer. All requests from the Presentation layer pass through it — no component in the Presentation layer ever communicates directly with a model or a repository. This design:
 
-- The Presentation layer never touches the database directly
-- The Persistence layer never knows about business rules
-- Swapping out one layer (e.g. changing the database in Part 3) requires zero changes to the other layers
+- Decouples the Presentation layer from the internal structure of the Business Logic Layer
+- Means the API never needs to know which model or repository handles a given operation
+- Keeps the three-layer boundary clean — one facade, one entry point, no shortcuts
 
 ### Diagram
 
@@ -49,38 +49,37 @@ The Facade pattern acts as the communication interface between layers. Instead o
 flowchart TD
     subgraph Presentation["Presentation Layer"]
         A1[API Endpoints]
-        A2[Services]
+        A1 -->|depends on| A2[Application Services]
     end
 
     subgraph BLL["Business Logic Layer"]
-        F[Facade Pattern]
-        F -->|Manages| B1[User Model]
-        F -->|Manages| B2[Place Model]
-        F -->|Manages| B3[Review Model]
-        F -->|Manages| B4[Amenity Model]
+        F[HBnBFacade]
+        F -->|communicates with| B1[User Model]
+        F -->|communicates with| B2[Place Model]
+        F -->|communicates with| B3[Review Model]
+        F -->|communicates with| B4[Amenity Model]
     end
 
     subgraph Persistence["Persistence Layer"]
-        C1[User Repository]
-        C2[Place Repository]
-        C3[Review Repository]
-        C4[Amenity Repository]
+        C1[UserRepository]
+        C2[PlaceRepository]
+        C3[ReviewRepository]
+        C4[AmenityRepository]
     end
 
     DB[(Database)]
 
-    A1 -->|Uses| F
-    A2 -->|Uses| F
+    A2 -->|depends on| F
 
-    B1 -->|Persists via| C1
-    B2 -->|Persists via| C2
-    B3 -->|Persists via| C3
-    B4 -->|Persists via| C4
+    B1 -->|accesses| C1
+    B2 -->|accesses| C2
+    B3 -->|accesses| C3
+    B4 -->|accesses| C4
 
-    C1 -->|Read/Write| DB
-    C2 -->|Read/Write| DB
-    C3 -->|Read/Write| DB
-    C4 -->|Read/Write| DB
+    C1 -->|persists to| DB
+    C2 -->|persists to| DB
+    C3 -->|persists to| DB
+    C4 -->|persists to| DB
 ```
 
 ---
@@ -349,7 +348,7 @@ This section summarizes the key design decisions made throughout this document a
 Separating the application into three layers (Presentation, Business Logic, Persistence) keeps concerns isolated. Each layer can be developed, tested, and replaced independently. For example, Part 3 of this project will swap the Persistence layer from in-memory storage to a full database without touching the BLL or API.
 
 **Why the Facade pattern?**
-The Facade pattern gives each layer a single, clean entry point to the layer below it. Without it, the API could call database methods directly, creating tight coupling that makes the codebase fragile and hard to maintain. With it, each layer only knows about its immediate neighbor.
+`HBnBFacade` is the single entry point to the entire Business Logic Layer. The Presentation layer never calls models or repositories directly — it only calls the facade. This keeps the three-layer boundary strict: if the internal structure of the BLL changes (e.g. a model is split or renamed), the Presentation layer requires zero changes because it only depends on the facade interface.
 
 **Why a shared BaseModel?**
 Rather than duplicating `id`, `created_at`, and `updated_at` across all four entities, `BaseModel` centralizes this logic. This guarantees consistent behavior for timestamps and identifiers across the entire application and reduces the risk of bugs from copy-paste errors.
