@@ -1,79 +1,58 @@
 from flask_restx import Namespace, Resource, fields
-import uuid
-from app.services.facade import HBnBFacade
+from app.services.facade import facade
 
-api = Namespace('users', description='User operations')
-facade = HBnBFacade()
+api = Namespace("users", description="User operations")
 
-# ---------- MODEL ----------
-user_model = api.model('User', {
-    'id': fields.String(readOnly=True),
-    'first_name': fields.String(required=True),
-    'last_name': fields.String(required=True),
-    'email': fields.String(required=True),
-    'is_admin': fields.Boolean(default=False)
+user_model = api.model("User", {
+    "first_name": fields.String(required=True),
+    "last_name":  fields.String(required=True),
+    "email":      fields.String(required=True),
+    "password":   fields.String(required=False),
 })
 
 
-# ---------- ROUTES ----------
-@api.route('/')
+@api.route("/")
 class UserList(Resource):
-
-    @api.marshal_list_with(user_model)
-    def get(self):
-        return facade.get_all_users()
-
-    @api.expect(user_model)
-    @api.marshal_with(user_model, code=201)
+    @api.expect(user_model, validate=True)
+    @api.response(201, "User created")
+    @api.response(400, "Bad request")
     def post(self):
+        """Create a new user"""
         data = api.payload
+        try:
+            user = facade.create_user(data)
+            return user.to_dict(), 201
+        except ValueError as e:
+            api.abort(400, str(e))
 
-        # validation
-        required = ["first_name", "last_name", "email"]
-        for field in required:
-            if field not in data or not data[field]:
-                return {"error": f"{field} is required"}, 400
-
-        if "@" not in data["email"]:
-            return {"error": "invalid email"}, 400
-
-        # unique email
-        for u in facade.get_all_users():
-            if u["email"] == data["email"]:
-                return {"error": "email already exists"}, 400
-
-        user = {
-            "id": str(uuid.uuid4()),
-            "first_name": data["first_name"],
-            "last_name": data["last_name"],
-            "email": data["email"],
-            "is_admin": False
-        }
-
-        return facade.create_user(user), 201
+    @api.response(200, "OK")
+    def get(self):
+        """Get all users"""
+        return [u.to_dict() for u in facade.get_all_users()], 200
 
 
-@api.route('/<user_id>')
+@api.route("/<string:user_id>")
 class UserResource(Resource):
-
-    @api.marshal_with(user_model)
+    @api.response(200, "OK")
+    @api.response(404, "User not found")
     def get(self, user_id):
+        """Get a user by ID"""
         user = facade.get_user(user_id)
-        if user:
-            return user
-        return {"error": "not found"}, 404
+        if not user:
+            api.abort(404, "User not found")
+        return user.to_dict(), 200
 
-    @api.expect(user_model)
-    @api.marshal_with(user_model)
+    @api.expect(user_model, validate=False)
+    @api.response(200, "Updated")
+    @api.response(400, "Bad request")
+    @api.response(404, "User not found")
     def put(self, user_id):
+        """Update a user"""
         data = api.payload
-
-        # email validation
-        if "email" in data and "@" not in data["email"]:
-            return {"error": "invalid email"}, 400
-
-        updated = facade.update_user(user_id, data)
-        if updated:
-            return updated
-
-        return {"error": "not found"}, 404
+        try:
+            user = facade.update_user(user_id, data)
+            if not user:
+                api.abort(404, "User not found")
+            return user.to_dict(), 200
+        except ValueError as e:
+            api.abort(400, str(e))

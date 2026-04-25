@@ -1,21 +1,51 @@
-class InMemoryRepository:
+from abc import ABC, abstractmethod
+
+
+class Repository(ABC):
+    @abstractmethod
+    def add(self, obj): pass
+
+    @abstractmethod
+    def get(self, obj_id): pass
+
+    @abstractmethod
+    def get_all(self): pass
+
+    @abstractmethod
+    def update(self, obj_id, data): pass
+
+    @abstractmethod
+    def delete(self, obj_id): pass
+
+    @abstractmethod
+    def get_by_attribute(self, attr, value): pass
+
+
+class InMemoryRepository(Repository):
     def __init__(self):
-        self.data = {}
+        self._storage = {}          # id -> object instance
 
     def add(self, obj):
-        self.data[obj["id"]] = obj
+        self._storage[obj.id] = obj
 
     def get(self, obj_id):
-        return self.data.get(obj_id)
+        return self._storage.get(obj_id)
 
     def get_all(self):
-        return list(self.data.values())
+        return list(self._storage.values())
 
-    def update(self, obj_id, new_data):
-        if obj_id in self.data:
-            self.data[obj_id].update(new_data)
-            return self.data[obj_id]
+    def update(self, obj_id, data):
+        obj = self.get(obj_id)
+        if obj:
+            obj.update(data)
+            return obj
         return None
 
     def delete(self, obj_id):
-        return self.data.pop(obj_id, None)
+        return self._storage.pop(obj_id, None)
+
+    def get_by_attribute(self, attr, value):
+        return next(
+            (obj for obj in self._storage.values() if getattr(obj, attr, None) == value),
+            None
+        )
