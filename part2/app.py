@@ -94,6 +94,10 @@ def places():
     if request.method == "POST":
         data = request.json
 
+        owner_exists = any(user["id"] == data["owner_id"] for user in users_data)
+        if not owner_exists:
+            return {"error": "owner not found"}, 400
+
         required = ["title", "price", "latitude", "longitude", "owner_id"]
         for field in required:
             if field not in data:
@@ -135,10 +139,21 @@ def reviews():
     if request.method == "POST":
         data = request.json
 
-        required = ["text", "user_id", "place_id"]
+        required = ["text", "user_id", "place_id", "rating"]
         for field in required:
             if field not in data:
                 return {"error": f"{field} is required"}, 400
+
+        user_exists = any(user["id"] == data["user_id"] for user in users_data)
+        if not user_exists:
+            return {"error": "user not found"}, 400
+
+        place_exists = any(place["id"] == data["place_id"] for place in places_data)
+        if not place_exists:
+            return {"error": "place not found"}, 400
+
+        if not (1 <= data["rating"] <= 5):
+            return {"error": "rating must be between 1 and 5"}, 400
 
         data["id"] = str(uuid.uuid4())
         reviews_data.append(data)
