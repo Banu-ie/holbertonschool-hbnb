@@ -36,13 +36,13 @@ def update_user(user_id):
     is_admin = claims.get('is_admin', False)
 
     if not is_admin and current_user_id != user_id:
-        return jsonify({'error': 'Unauthorized'}), 403
+        return jsonify({'error': 'Unauthorized action'}), 403
 
     data = request.get_json(silent=True) or {}
 
     if not is_admin:
-        data.pop('email', None)
-        data.pop('password', None)
+        if 'email' in data or 'password' in data:
+            return jsonify({'error': 'You cannot modify email or password'}), 400
         data.pop('is_admin', None)
 
     try:

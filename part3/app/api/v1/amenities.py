@@ -20,7 +20,7 @@ def get_amenity(amenity_id):
 def create_amenity():
     claims = get_jwt()
     if not claims.get('is_admin', False):
-        return jsonify({'error': 'Admin access required'}), 403
+        return jsonify({'error': 'Admin privileges required'}), 403
     data = request.get_json(silent=True) or {}
     if not data.get('name'):
         return jsonify({'error': 'name is required'}), 400
@@ -35,7 +35,7 @@ def create_amenity():
 def update_amenity(amenity_id):
     claims = get_jwt()
     if not claims.get('is_admin', False):
-        return jsonify({'error': 'Admin access required'}), 403
+        return jsonify({'error': 'Admin privileges required'}), 403
     data = request.get_json(silent=True) or {}
     amenity = facade.update_amenity(amenity_id, data)
     if not amenity:

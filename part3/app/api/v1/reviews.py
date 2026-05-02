@@ -35,10 +35,10 @@ def create_review():
     if not place:
         return jsonify({'error': 'Place not found'}), 404
     if place.owner_id == current_user_id:
-        return jsonify({'error': 'Cannot review your own place'}), 403
+        return jsonify({'error': 'You cannot review your own place'}), 400
     existing = facade.get_review_by_user_and_place(current_user_id, data['place_id'])
     if existing:
-        return jsonify({'error': 'Already reviewed this place'}), 409
+        return jsonify({'error': 'You have already reviewed this place'}), 400
     try:
         review = facade.create_review(data)
     except ValueError as e:
@@ -55,7 +55,7 @@ def update_review(review_id):
     if not review:
         return jsonify({'error': 'Review not found'}), 404
     if not is_admin and review.user_id != current_user_id:
-        return jsonify({'error': 'Unauthorized'}), 403
+        return jsonify({'error': 'Unauthorized action'}), 403
     data = request.get_json(silent=True) or {}
     review = facade.update_review(review_id, data)
     return jsonify(review.to_dict()), 200
@@ -70,6 +70,6 @@ def delete_review(review_id):
     if not review:
         return jsonify({'error': 'Review not found'}), 404
     if not is_admin and review.user_id != current_user_id:
-        return jsonify({'error': 'Unauthorized'}), 403
+        return jsonify({'error': 'Unauthorized action'}), 403
     facade.delete_review(review_id)
     return jsonify({'message': 'Review deleted'}), 200

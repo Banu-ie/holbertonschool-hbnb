@@ -1,4 +1,3 @@
-import re
 from app import db, bcrypt
 from app.models.base_model import BaseModel
 
@@ -17,6 +16,9 @@ class User(BaseModel):
 
     @password.setter
     def password(self, plaintext):
+        self._password = bcrypt.generate_password_hash(plaintext).decode('utf-8')
+
+    def hash_password(self, plaintext):
         self._password = bcrypt.generate_password_hash(plaintext).decode('utf-8')
 
     def verify_password(self, plaintext):

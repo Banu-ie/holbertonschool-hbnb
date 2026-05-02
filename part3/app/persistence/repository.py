@@ -37,3 +37,38 @@ class SQLAlchemyRepository:
             db.session.delete(obj)
             db.session.commit()
         return obj
+
+
+class UserRepository(SQLAlchemyRepository):
+    def __init__(self):
+        from app.models.user import User
+        super().__init__(User)
+
+    def get_user_by_email(self, email):
+        return self.get_by_attribute('email', email)
+
+
+class PlaceRepository(SQLAlchemyRepository):
+    def __init__(self):
+        from app.models.place import Place
+        super().__init__(Place)
+
+
+class ReviewRepository(SQLAlchemyRepository):
+    def __init__(self):
+        from app.models.review import Review
+        super().__init__(Review)
+
+    def get_by_user_and_place(self, user_id, place_id):
+        from app.models.review import Review
+        return Review.query.filter_by(user_id=user_id, place_id=place_id).first()
+
+    def get_by_place(self, place_id):
+        from app.models.review import Review
+        return Review.query.filter_by(place_id=place_id).all()
+
+
+class AmenityRepository(SQLAlchemyRepository):
+    def __init__(self):
+        from app.models.amenity import Amenity
+        super().__init__(Amenity)

@@ -41,7 +41,7 @@ def update_place(place_id):
     if not place:
         return jsonify({'error': 'Place not found'}), 404
     if not is_admin and place.owner_id != current_user_id:
-        return jsonify({'error': 'Unauthorized'}), 403
+        return jsonify({'error': 'Unauthorized action'}), 403
     data = request.get_json(silent=True) or {}
     place = facade.update_place(place_id, data)
     return jsonify(place.to_dict()), 200
@@ -56,6 +56,6 @@ def delete_place(place_id):
     if not place:
         return jsonify({'error': 'Place not found'}), 404
     if not is_admin and place.owner_id != current_user_id:
-        return jsonify({'error': 'Unauthorized'}), 403
+        return jsonify({'error': 'Unauthorized action'}), 403
     facade.delete_place(place_id)
     return jsonify({'message': 'Place deleted'}), 200
