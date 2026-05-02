@@ -1,37 +1,33 @@
 import re
+from app import db, bcrypt
 from app.models.base_model import BaseModel
 
 class User(BaseModel):
-    def __init__(self, first_name, last_name, email, password="", is_admin=False):
-        super().__init__()
-        self._validate_first_name(first_name)
-        self._validate_last_name(last_name)
-        self._validate_email(email)
-        self.first_name = first_name
-        self.last_name = last_name
-        self.email = email
-        self.password = password
-        self.is_admin = is_admin
+    __tablename__ = 'users'
 
-    def _validate_first_name(self, v):
-        if not v or len(v) > 50:
-            raise ValueError("first_name is required and max 50 chars")
+    first_name = db.Column(db.String(50), nullable=False)
+    last_name  = db.Column(db.String(50), nullable=False)
+    email      = db.Column(db.String(120), unique=True, nullable=False)
+    _password  = db.Column('password', db.String(128), nullable=False)
+    is_admin   = db.Column(db.Boolean, default=False, nullable=False)
 
-    def _validate_last_name(self, v):
-        if not v or len(v) > 50:
-            raise ValueError("last_name is required and max 50 chars")
+    @property
+    def password(self):
+        raise AttributeError('password is write-only')
 
-    def _validate_email(self, v):
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", v):
-            raise ValueError("Invalid email format")
+    @password.setter
+    def password(self, plaintext):
+        self._password = bcrypt.generate_password_hash(plaintext).decode('utf-8')
 
-    def update(self, data):
-        if "first_name" in data: self._validate_first_name(data["first_name"])
-        if "last_name" in data: self._validate_last_name(data["last_name"])
-        if "email" in data: self._validate_email(data["email"])
-        super().update(data)
+    def verify_password(self, plaintext):
+        return bcrypt.check_password_hash(self._password, plaintext)
 
     def to_dict(self):
-        return {"id": self.id, "first_name": self.first_name, "last_name": self.last_name,
-                "email": self.email, "is_admin": self.is_admin,
-                "created_at": self.created_at.isoformat(), "updated_at": self.updated_at.isoformat()}
+        base = super().to_dict()
+        base.update({
+            'first_name': self.first_name,
+            'last_name':  self.last_name,
+            'email':      self.email,
+            'is_admin':   self.is_admin,
+        })
+        return base

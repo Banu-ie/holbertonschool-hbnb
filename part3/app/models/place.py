@@ -1,52 +1,35 @@
+from app import db
 from app.models.base_model import BaseModel
 
+place_amenity = db.Table(
+    'place_amenity',
+    db.Column('place_id',   db.String(36), db.ForeignKey('places.id'),    primary_key=True),
+    db.Column('amenity_id', db.String(36), db.ForeignKey('amenities.id'), primary_key=True),
+)
+
 class Place(BaseModel):
-    def __init__(self, title, description, price, latitude, longitude, owner):
-        super().__init__()
-        self._validate_title(title)
-        self._validate_price(price)
-        self._validate_latitude(latitude)
-        self._validate_longitude(longitude)
-        self.title = title
-        self.description = description or ""
-        self.price = float(price)
-        self.latitude = float(latitude)
-        self.longitude = float(longitude)
-        self.owner = owner
-        self.amenities = []
-        self.reviews = []
+    __tablename__ = 'places'
 
-    def _validate_title(self, v):
-        if not v or len(v) > 100:
-            raise ValueError("title is required and max 100 chars")
+    title       = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, default='')
+    price       = db.Column(db.Float, nullable=False)
+    latitude    = db.Column(db.Float, nullable=False)
+    longitude   = db.Column(db.Float, nullable=False)
+    owner_id    = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
 
-    def _validate_price(self, v):
-        if float(v) < 0:
-            raise ValueError("price must be non-negative")
-
-    def _validate_latitude(self, v):
-        if not (-90.0 <= float(v) <= 90.0):
-            raise ValueError("latitude must be between -90 and 90")
-
-    def _validate_longitude(self, v):
-        if not (-180.0 <= float(v) <= 180.0):
-            raise ValueError("longitude must be between -180 and 180")
-
-    def update(self, data):
-        if "title" in data: self._validate_title(data["title"])
-        if "price" in data: self._validate_price(data["price"])
-        if "latitude" in data: self._validate_latitude(data["latitude"])
-        if "longitude" in data: self._validate_longitude(data["longitude"])
-        super().update(data)
-
-    def add_amenity(self, amenity):
-        if amenity not in self.amenities: self.amenities.append(amenity)
-
-    def add_review(self, review):
-        if review not in self.reviews: self.reviews.append(review)
+    reviews   = db.relationship('Review',  backref='place', lazy=True, cascade='all, delete-orphan')
+    amenities = db.relationship('Amenity', secondary=place_amenity, lazy='subquery',
+                                backref=db.backref('places', lazy=True))
 
     def to_dict(self):
-        return {"id": self.id, "title": self.title, "description": self.description,
-                "price": self.price, "latitude": self.latitude, "longitude": self.longitude,
-                "owner": self.owner.to_dict(), "amenities": [a.to_dict() for a in self.amenities],
-                "created_at": self.created_at.isoformat(), "updated_at": self.updated_at.isoformat()}
+        base = super().to_dict()
+        base.update({
+            'title':       self.title,
+            'description': self.description,
+            'price':       self.price,
+            'latitude':    self.latitude,
+            'longitude':   self.longitude,
+            'owner_id':    self.owner_id,
+            'amenities':   [a.to_dict() for a in self.amenities],
+        })
+        return base
