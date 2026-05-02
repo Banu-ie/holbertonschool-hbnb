@@ -1,51 +1,39 @@
-from abc import ABC, abstractmethod
+from app import db
 
 
-class Repository(ABC):
-    @abstractmethod
-    def add(self, obj): pass
-
-    @abstractmethod
-    def get(self, obj_id): pass
-
-    @abstractmethod
-    def get_all(self): pass
-
-    @abstractmethod
-    def update(self, obj_id, data): pass
-
-    @abstractmethod
-    def delete(self, obj_id): pass
-
-    @abstractmethod
-    def get_by_attribute(self, attr, value): pass
-
-
-class InMemoryRepository(Repository):
-    def __init__(self):
-        self._storage = {}          # id -> object instance
+class SQLAlchemyRepository:
+    def __init__(self, model):
+        self.model = model
 
     def add(self, obj):
-        self._storage[obj.id] = obj
+        db.session.add(obj)
+        db.session.commit()
+        return obj
 
     def get(self, obj_id):
-        return self._storage.get(obj_id)
+        return self.model.query.get(obj_id)
 
     def get_all(self):
-        return list(self._storage.values())
+        return self.model.query.all()
+
+    def get_by_attribute(self, attr, value):
+        return self.model.query.filter(
+            getattr(self.model, attr) == value
+        ).first()
 
     def update(self, obj_id, data):
         obj = self.get(obj_id)
-        if obj:
-            obj.update(data)
-            return obj
-        return None
+        if not obj:
+            return None
+        for key, value in data.items():
+            if key not in ('id', 'created_at'):
+                setattr(obj, key, value)
+        db.session.commit()
+        return obj
 
     def delete(self, obj_id):
-        return self._storage.pop(obj_id, None)
-
-    def get_by_attribute(self, attr, value):
-        return next(
-            (obj for obj in self._storage.values() if getattr(obj, attr, None) == value),
-            None
-        )
+        obj = self.get(obj_id)
+        if obj:
+            db.session.delete(obj)
+            db.session.commit()
+        return obj
