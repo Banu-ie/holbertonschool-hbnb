@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt, verify_jwt_in_request
 from app.services.facade import facade
 
 users_bp = Blueprint('users', __name__)
@@ -16,8 +16,24 @@ def get_user(user_id):
     return jsonify(user.to_dict()), 200
 
 @users_bp.route('/', methods=['POST'])
+@jwt_required(optional=True)
 def create_user():
+    claims = {}
+    try:
+        verify_jwt_in_request(optional=True)
+        from flask_jwt_extended import get_jwt
+        claims = get_jwt()
+    except Exception:
+        pass
+
+    is_admin = claims.get('is_admin', False)
+
     data = request.get_json(silent=True) or {}
+
+    # Non-admin cannot set is_admin=True
+    if not is_admin:
+        data.pop('is_admin', None)
+
     required = ('first_name', 'last_name', 'email', 'password')
     missing = [f for f in required if not data.get(f)]
     if missing:
