@@ -17,7 +17,8 @@ class Place(BaseModel):
     longitude   = db.Column(db.Float, nullable=False)
     owner_id    = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
 
-    reviews   = db.relationship('Review',  backref='place', lazy=True, cascade='all, delete-orphan')
+    owner     = db.relationship('User', backref=db.backref('places', lazy=True))
+    reviews   = db.relationship('Review', backref='place', lazy=True, cascade='all, delete-orphan')
     amenities = db.relationship('Amenity', secondary=place_amenity, lazy='subquery',
                                 backref=db.backref('places', lazy=True))
 

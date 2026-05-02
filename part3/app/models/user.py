@@ -10,6 +10,8 @@ class User(BaseModel):
     _password  = db.Column('password', db.String(128), nullable=False)
     is_admin   = db.Column(db.Boolean, default=False, nullable=False)
 
+    reviews = db.relationship('Review', backref='author', lazy=True)
+
     @property
     def password(self):
         raise AttributeError('password is write-only')
