@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt
 from app.services.facade import facade
 
 amenities_bp = Blueprint('amenities', __name__)
@@ -15,7 +16,11 @@ def get_amenity(amenity_id):
     return jsonify(amenity.to_dict()), 200
 
 @amenities_bp.route('/', methods=['POST'])
+@jwt_required()
 def create_amenity():
+    claims = get_jwt()
+    if not claims.get('is_admin', False):
+        return jsonify({'error': 'Admin access required'}), 403
     data = request.get_json(silent=True) or {}
     if not data.get('name'):
         return jsonify({'error': 'name is required'}), 400
@@ -26,7 +31,11 @@ def create_amenity():
     return jsonify(amenity.to_dict()), 201
 
 @amenities_bp.route('/<amenity_id>', methods=['PUT'])
+@jwt_required()
 def update_amenity(amenity_id):
+    claims = get_jwt()
+    if not claims.get('is_admin', False):
+        return jsonify({'error': 'Admin access required'}), 403
     data = request.get_json(silent=True) or {}
     amenity = facade.update_amenity(amenity_id, data)
     if not amenity:
