@@ -135,6 +135,9 @@ class HBnBFacade:
     def get_reviews_by_place(self, place_id):
         return Review.query.filter_by(place_id=place_id).all()
 
+    def get_review_by_user_and_place(self, user_id, place_id):
+        return Review.query.filter_by(user_id=user_id, place_id=place_id).first()
+
     def update_review(self, review_id, data):
         review = Review.query.get(review_id)
         if not review:
