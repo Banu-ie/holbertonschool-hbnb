@@ -1,11 +1,5 @@
-/* HBnB - scripts.js
-   Handles: login, places list, place details, add review */
-
 const API_URL = 'http://127.0.0.1:5000/api/v1';
 
-/* ---- UTILITY ---- */
-
-// Get cookie value by name
 function getCookie(name) {
     const cookies = document.cookie.split(';');
     for (let cookie of cookies) {
@@ -15,20 +9,15 @@ function getCookie(name) {
     return null;
 }
 
-// Get place ID from URL query string (?id=...)
 function getPlaceIdFromURL() {
     const params = new URLSearchParams(window.location.search);
     return params.get('id');
 }
 
-// Generate star string from numeric rating
 function getStars(rating) {
-    return '★'.repeat(rating) + '☆'.repeat(5 - rating);
+    return '\u2605'.repeat(rating) + '\u2606'.repeat(5 - rating);
 }
 
-/* ---- TASK 1: LOGIN ---- */
-
-// Send login POST request, store token in cookie, redirect on success
 async function loginUser(email, password) {
     const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
@@ -37,7 +26,6 @@ async function loginUser(email, password) {
     });
     if (response.ok) {
         const data = await response.json();
-        // Store JWT token in cookie for session management
         document.cookie = `token=${data.access_token}; path=/`;
         window.location.href = 'index.html';
     } else {
@@ -47,19 +35,13 @@ async function loginUser(email, password) {
     }
 }
 
-/* ---- TASK 2: INDEX - places list + filter ---- */
-
-// Check auth: show/hide login link, return token
 function checkAuthentication() {
     const token = getCookie('token');
     const loginLink = document.getElementById('login-link');
-    if (loginLink) {
-        loginLink.style.display = token ? 'none' : 'block';
-    }
+    if (loginLink) loginLink.style.display = token ? 'none' : 'block';
     return token;
 }
 
-// Fetch all places from API
 async function fetchPlaces(token) {
     try {
         const headers = { 'Content-Type': 'application/json' };
@@ -75,7 +57,6 @@ async function fetchPlaces(token) {
     }
 }
 
-// Render place cards into #places-list
 function displayPlaces(places) {
     const list = document.getElementById('places-list');
     if (!list) return;
@@ -97,7 +78,6 @@ function displayPlaces(places) {
     });
 }
 
-// Client-side price filter — show/hide cards without reload
 function filterPlacesByPrice(maxPrice) {
     document.querySelectorAll('.place-card').forEach(card => {
         const price = parseFloat(card.dataset.price) || 0;
@@ -105,9 +85,6 @@ function filterPlacesByPrice(maxPrice) {
     });
 }
 
-/* ---- TASK 3: PLACE DETAILS ---- */
-
-// Fetch one place and its reviews
 async function fetchPlaceDetails(token, placeId) {
     try {
         const headers = { 'Content-Type': 'application/json' };
@@ -123,7 +100,6 @@ async function fetchPlaceDetails(token, placeId) {
     }
 }
 
-// Render place details into #place-details
 function displayPlaceDetails(place) {
     const section = document.getElementById('place-details');
     if (!section) return;
@@ -150,7 +126,6 @@ function displayPlaceDetails(place) {
     `;
 }
 
-// Fetch and render reviews for a place
 async function fetchReviews(token, placeId) {
     try {
         const headers = { 'Content-Type': 'application/json' };
@@ -178,9 +153,6 @@ async function fetchReviews(token, placeId) {
     }
 }
 
-/* ---- TASK 4: SUBMIT REVIEW ---- */
-
-// POST review to API with JWT token
 async function submitReview(token, placeId, reviewText, rating) {
     return await fetch(`${API_URL}/reviews/`, {
         method: 'POST',
@@ -192,7 +164,6 @@ async function submitReview(token, placeId, reviewText, rating) {
     });
 }
 
-// Handle API response after review submission
 function handleResponse(response, form) {
     if (response.ok) {
         alert('Review submitted successfully!');
@@ -204,12 +175,9 @@ function handleResponse(response, form) {
     }
 }
 
-/* ---- DOMContentLoaded: route logic per page ---- */
-
 document.addEventListener('DOMContentLoaded', () => {
     const page = window.location.pathname.split('/').pop();
 
-    // LOGIN PAGE
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         loginForm.addEventListener('submit', async (event) => {
@@ -221,7 +189,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // INDEX PAGE
     if (page === 'index.html' || page === '') {
         const token = checkAuthentication();
         fetchPlaces(token);
@@ -233,7 +200,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // PLACE DETAILS PAGE
     if (page === 'place.html') {
         const token = checkAuthentication();
         const placeId = getPlaceIdFromURL();
@@ -258,7 +224,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ADD REVIEW PAGE
     if (page === 'add_review.html') {
         const token = getCookie('token');
         if (!token) { window.location.href = 'index.html'; return; }
