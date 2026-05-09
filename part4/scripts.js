@@ -18,7 +18,7 @@ function renderStars(rating) {
 /* TASK 1 - LOGIN */
 async function loginUser(email, password) {
   try {
-    const response = await fetch(API_URL + '/login', {
+    const response = await fetch(API_URL + '/api/v1/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: email, password: password })
@@ -57,7 +57,7 @@ async function fetchPlaces(token) {
   const headers = {};
   if (token) { headers['Authorization'] = 'Bearer ' + token; }
   try {
-    const response = await fetch(API_URL + '/places', { headers: headers });
+    const response = await fetch(API_URL + '/api/v1/places', { headers: headers });
     if (!response.ok) { throw new Error('Failed to fetch'); }
     const places = await response.json();
     displayPlaces(places);
@@ -84,10 +84,10 @@ function displayPlaces(places) {
   places.forEach(function(place) {
     const card = document.createElement('div');
     card.className = 'place-card';
-    card.dataset.price = place.price_by_night || place.price || 0;
-    const price = place.price_by_night !== undefined ? place.price_by_night : (place.price !== undefined ? place.price : 'N/A');
+    card.dataset.price = place.price || 0;
+    const price = place.price;
     card.innerHTML =
-      '<h3>' + place.name + '</h3>' +
+      '<h3>' + place.title + '</h3>' +
       '<p class="price">$' + price + ' / night</p>' +
       '<a href="place.html?id=' + place.id + '" class="details-button">View Details</a>';
     list.appendChild(card);
@@ -123,7 +123,7 @@ async function fetchPlaceDetails(token, placeId) {
   const headers = {};
   if (token) { headers['Authorization'] = 'Bearer ' + token; }
   try {
-    const response = await fetch(API_URL + '/places/' + placeId, { headers: headers });
+    const response = await fetch(API_URL + '/api/v1/places/' + placeId, { headers: headers });
     if (!response.ok) { throw new Error('Not found'); }
     const place = await response.json();
     displayPlaceDetails(place);
@@ -140,11 +140,11 @@ function displayPlaceDetails(place) {
   const amenitiesHTML = amenities.map(function(a) {
     return '<span class="amenity-tag">' + (a.name || a) + '</span>';
   }).join('');
-  const price = place.price_by_night !== undefined ? place.price_by_night : (place.price !== undefined ? place.price : 'N/A');
+  const price = place.price;
   const host = (place.owner && place.owner.first_name) ? place.owner.first_name : (place.host_name || 'Unknown');
   const maxGuest = place.max_guest !== undefined ? place.max_guest : 'N/A';
   section.innerHTML =
-    '<h1>' + place.name + '</h1>' +
+    '<h1>' + place.title + '</h1>' +
     '<div class="place-info">' +
       '<span class="info-price">$' + price + ' / night</span>' +
       '<span>Host: ' + host + '</span>' +
@@ -203,7 +203,7 @@ function wireReviewForm(form, placeId, token) {
 
 async function submitReview(token, placeId, reviewText, rating) {
   try {
-    const response = await fetch(API_URL + '/places/' + placeId + '/reviews', {
+    const response = await fetch(API_URL + '/api/v1/places/' + placeId + '/reviews', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
