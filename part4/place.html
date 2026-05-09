@@ -15,17 +15,14 @@
       <a href="login.html" class="login-button" id="login-link">Login</a>
     </nav>
   </header>
-
   <main>
     <section id="place-details" class="place-details">
       <p>Loading place details...</p>
     </section>
-
     <section class="reviews-section">
       <h2>Guest Reviews</h2>
       <div id="reviews-list"></div>
     </section>
-
     <section id="add-review" class="add-review hidden">
       <h2>Leave a Review</h2>
       <form id="review-form" class="form" novalidate>
@@ -37,11 +34,11 @@
           <label for="rating">Rating (1-5)</label>
           <select id="rating" name="rating" required>
             <option value="">Select rating</option>
-            <option value="1">⭐ 1 - Poor</option>
-            <option value="2">⭐⭐ 2 - Fair</option>
-            <option value="3">⭐⭐⭐ 3 - Good</option>
-            <option value="4">⭐⭐⭐⭐ 4 - Very Good</option>
-            <option value="5">⭐⭐⭐⭐⭐ 5 - Excellent</option>
+            <option value="1">1 - Poor</option>
+            <option value="2">2 - Fair</option>
+            <option value="3">3 - Good</option>
+            <option value="4">4 - Very Good</option>
+            <option value="5">5 - Excellent</option>
           </select>
         </div>
         <button type="submit" class="btn-primary">Submit Review</button>
@@ -49,11 +46,9 @@
       </form>
     </section>
   </main>
-
   <footer>
     <p>&copy; 2024 HBnB. All rights reserved.</p>
   </footer>
-
   <script src="scripts.js"></script>
 </body>
 </html>
